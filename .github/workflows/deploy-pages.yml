@@ -1,0 +1,75 @@
+name: Deploy Himaya PWA to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - arena/01a05ec2-anti-theft-of-phones
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      base_path: ${{ steps.base.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/configure-pages@v5
+      - name: Resolve the public base path
+        id: base
+        env:
+          CONFIGURED_BASE_PATH: ${{ vars.PAGES_BASE_PATH }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          value="${CONFIGURED_BASE_PATH:-/${REPOSITORY_NAME}/}"
+          case "$value" in
+            /|/*/) ;;
+            *) echo "::error::PAGES_BASE_PATH must be / or start and end with /."; exit 1 ;;
+          esac
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+      - run: npm ci
+      - run: npm run check:pwa
+      - name: Ensure browser configuration is present
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$VITE_SUPABASE_URL" || { echo "::error::Missing VITE_SUPABASE_URL GitHub secret."; exit 1; }
+          test -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Missing VITE_SUPABASE_ANON_KEY GitHub secret."; exit 1; }
+          [[ "$VITE_SUPABASE_URL" =~ ^https:// ]] || { echo "::error::VITE_SUPABASE_URL must start with https://"; exit 1; }
+      - name: Build the static PWA
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_APP_ENV: production
+          VITE_BASE_PATH: ${{ steps.base.outputs.value }}
+          VITE_ROUTER_MODE: hash
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
