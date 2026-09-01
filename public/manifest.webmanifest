@@ -1,0 +1,53 @@
+{
+  "id": "./",
+  "name": "حماية | نظام مكافحة سرقة الأجهزة",
+  "short_name": "حماية",
+  "lang": "ar",
+  "dir": "rtl",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "start_url": "./",
+  "scope": "./",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f6fa",
+  "theme_color": "#0b1523",
+  "description": "منصة موثوقة لإدارة دورة حياة الأجهزة والبلاغات الأمنية.",
+  "categories": ["business", "security", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "فحص IMEI",
+      "short_name": "فحص IMEI",
+      "description": "فحص حالة رقم IMEI عبر السجل الآمن",
+      "url": "./#/check",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "لوحة التحكم",
+      "short_name": "الرئيسية",
+      "description": "فتح لوحة التحكم",
+      "url": "./#/",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
