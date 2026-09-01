@@ -1,0 +1,135 @@
+project_id = "himaya-device-lifecycle"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173", "https://*.e2b.app"]
+jwt_expiry = 3600
+enable_signup = true
+minimum_password_length = 12
+password_requirements = "lower_upper_letters_digits_symbols"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[storage]
+enabled = true
+file_size_limit = "16MiB"
+
+[functions.bootstrap]
+verify_jwt = true
+[functions.check-imei]
+verify_jwt = true
+[functions.create-device]
+verify_jwt = true
+[functions.register-sale]
+verify_jwt = true
+[functions.create-repair]
+verify_jwt = true
+[functions.create-format-record]
+verify_jwt = true
+[functions.create-stolen-report]
+verify_jwt = true
+[functions.update-report-status]
+verify_jwt = true
+[functions.assign-report]
+verify_jwt = true
+[functions.get-device-timeline]
+verify_jwt = true
+[functions.access-sensitive-data]
+verify_jwt = true
+[functions.create-evidence-upload]
+verify_jwt = true
+[functions.complete-evidence-upload]
+verify_jwt = true
+[functions.get-evidence-url]
+verify_jwt = true
+[functions.create-device-media-upload]
+verify_jwt = true
+[functions.complete-device-media-upload]
+verify_jwt = true
+[functions.get-device-media-url]
+verify_jwt = true
+[functions.get-dashboard]
+verify_jwt = true
+[functions.get-notifications]
+verify_jwt = true
+[functions.mark-notification-read]
+verify_jwt = true
+[functions.generate-report]
+verify_jwt = true
+[functions.security-event]
+verify_jwt = true
+[functions.ingest-auth-event]
+verify_jwt = false
+[functions.get-reports]
+verify_jwt = true
+[functions.get-report-detail]
+verify_jwt = true
+[functions.get-devices]
+verify_jwt = true
+[functions.get-audit-logs]
+verify_jwt = true
+[functions.get-security-events]
+verify_jwt = true
+[functions.search-records]
+verify_jwt = true
+[functions.search-sensitive-customer]
+verify_jwt = true
+[functions.add-report-follow-up]
+verify_jwt = true
+[functions.submit-shop]
+verify_jwt = true
+[functions.approve-shop]
+verify_jwt = true
+[functions.suspend-shop]
+verify_jwt = true
+[functions.link-shop-user]
+verify_jwt = true
+[functions.set-user-roles]
+verify_jwt = true
+[functions.update-user-status]
+verify_jwt = true
+[functions.create-location]
+verify_jwt = true
+[functions.get-shops]
+verify_jwt = true
+[functions.resolve-security-event]
+verify_jwt = true
+[functions.update-system-setting]
+verify_jwt = true
+[functions.revoke-other-sessions]
+verify_jwt = true
+[functions.get-users]
+verify_jwt = true
+[functions.invite-user]
+verify_jwt = true
+[functions.create-identity-document-upload]
+verify_jwt = true
+[functions.complete-identity-document-upload]
+verify_jwt = true
+[functions.get-identity-document-url]
+verify_jwt = true
+[functions.get-case-assignees]
+verify_jwt = true
