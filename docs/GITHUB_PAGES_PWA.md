@@ -128,13 +128,13 @@ https://OWNER.github.io/REPOSITORY/#/
 
 ## 4) حفظ أسرار الخادم في GitHub بأمان نسبيًا
 
-يوجد قالب workflow منفصل يدوي فقط في [ملف الإضافة اليدوية](GITHUB_WORKFLOWS_MANUAL.md)، أضفه بالمسار:
+يوجد workflow خلفي منفصل يدوي فقط:
 
 ```text
 .github/workflows/deploy-supabase.yml
 ```
 
-لا يبني الواجهة بهذه القيم. عند تشغيله يدويًا، يطبق migrations، يرسل الأسرار إلى Supabase Edge runtime، ثم ينشر Edge Functions.
+إن لم يكن الملف موجودًا في مستودعك (بعض اتصالات التكامل تمنع رفع ملفات workflows)، فانسخ محتواه كما هو من [ملف النسخ المرجعية](GITHUB_WORKFLOWS_MANUAL.md). لا يبني الواجهة بهذه القيم. عند تشغيله يدويًا، يطبق migrations، يرسل الأسرار إلى Supabase Edge runtime، ثم ينشر Edge Functions.
 
 ### أنشئ GitHub Environments
 

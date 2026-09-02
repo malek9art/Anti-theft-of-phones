@@ -124,26 +124,27 @@ npm run dev
 
 ## 4) تجهيز أول مدير نظام بأمان
 
-التسجيل العادي ينشئ ملف مستخدم بحالة `pending` **دون أي دور**. هذا مقصود لمنع إنشاء مدير من المتصفح.
+التسجيل العادي ينشئ ملف مستخدم بحالة `pending` **دون أي دور**. هذا مقصود لمنع إنشاء مدير من المتصفح. الترتيب إلزامي — أي خطوة سابقة للترتيب تُنتج أخطاء مثل:
 
-1. سجّل أول حساب من شاشة الدخول/التسجيل، وأكد بريده في البريد المحلي أو من Supabase Studio.
-2. من SQL Editor محلي مقيد أو عملية bootstrap موثقة واحدة، نفّذ التالي بعد استبدال المعرف:
+- `relation "public.users" does not exist` ⇒ **migrations لم تُطبَّق في المشروع المقصود** أو أنك تعمل على مشروع Supabase مختلف.
+- `لم يُعثر على حساب Auth ...` ⇒ الحساب غير موجود أو بريده غير مؤكد.
+
+1. تأكد أولًا أن migrations مطبّقة بالكامل على المشروع نفسه (راجع القسم 8 أدناه): `supabase link --project-ref ...` ثم `supabase migration list` ثم `supabase db push`.
+2. سجّل أول حساب من شاشة الدخول/التسجيل، و**أكّد بريده الإلكتروني** (من Inbucket محليًا أو من رابط التأكيد). بدون تأكيد البريد يتوقف bootstrap عن العمل عمدًا.
+3. انسخ UUID حساب Auth من Supabase Dashboard → **Authentication → Users**.
+4. افتح **SQL Editor** ونفّذ السكربت الآمن مرة واحدة فقط بعد استبدال المعرّف:
 
    ```sql
-   update public.users
-   set account_status = 'active'
-   where id = 'USER_UUID';
-
-   insert into public.user_roles (user_id, role_id)
-   select 'USER_UUID'::uuid, id
-   from public.roles
-   where key = 'system_admin'
-   on conflict do nothing;
+   -- المسار في المستودع: supabase/scripts/bootstrap_first_system_admin.sql
+   -- استبدل القيمة الوحيدة:
+   --   v_target := 'REPLACE_WITH_AUTH_USER_UUID';
    ```
 
-3. سجّل الدخول بهذا الحساب.
-4. افتح **أمان الحساب**، اختر **إعداد تطبيق المصادقة**، امسح QR في تطبيق TOTP، ثم أدخل الرمز لتأكيده.
-5. بعد MFA تكون جلسة المدير AAL2 ويمكنه تنفيذ العمليات الإدارية الحساسة.
+   السكربت يتوقف تلقائيًا عند: غياب migrations، غياب حساب Auth، عدم تأكيد البريد، أو عدم استبدال المعرّف. ثم يضمن وجود ملف `public.users`، يفعّل الحساب، يمنح دور `system_admin` مرة واحدة، ويكتب حدثًا في سجل التدقيق غير القابل للتعديل. لا يحتوي على أي UUID أو بريد أو بيانات شخصية ثابتة.
+
+5. سجّل الدخول بهذا الحساب.
+6. افتح **أمان الحساب**، اختر **إعداد تطبيق المصادقة**، امسح QR في تطبيق TOTP، ثم أدخل الرمز لتأكيده.
+7. بعد MFA تكون جلسة المدير AAL2 ويمكنه تنفيذ العمليات الإدارية الحساسة.
 
 **مهم:** كل دالة حساسة ترفض جلسة AAL1 خادميًا، حتى لو كانت قيمة `mfa_required` للمستخدم `false`. هذا يشمل إدارة المستخدمين، اعتماد المحلات، البلاغات، الأدلة، التعيين، التدقيق، والتقارير الحساسة.
 
@@ -259,7 +260,61 @@ supabase/tests/002_lifecycle_permission_scenario.sql
 
 ---
 
-## 8) الاختبارات قبل دمج أو نشر أي تغيير
+## 8) تطبيق migrations بأمان (link / migration list / db push)
+
+الطريقة الوحيدة الموصى بها لتطبيق المخطط على مشروع Supabase حقيقي هي أدوات CLI، لأنها تسجّل كل ملف في `supabase_migrations.schema_migrations`. لا تنفّذ محتوى ملفات `migrations` يدويًا في SQL Editor.
+
+### 8.1 الترتيب الصحيح
+
+```bash
+supabase login                                   # مرة واحدة لكل بيئة
+supabase link --project-ref YOUR_PROJECT_REF      # اربط مجلد المشروع بالمشروع البعيد
+supabase migration list                           # اعرض المطبَّق والمتبقي (محليًا وبعيدًا)
+supabase db push                                  # طبّق المتبقي بالترتيب وبشكل آمن
+```
+
+- `supabase migration list` يعرض عمودين: `Local` (الملفات الموجودة في `supabase/migrations`) و`Remote` (المسجلة في قاعدة البيانات). إن ظهرت ملفات في Local وليست في Remote فهي لم تُطبَّق بعد.
+- `supabase db push` يطبّق فقط ما ينقصه المشروع البعيد، ولا يعيد تطبيق ما سبق. لا يستخدم destructive commands.
+- لا تستخدم `supabase db reset` على مشروع staging/production؛ هو مخصص للقاعدة المحلية فقط.
+
+### 8.2 متى يكون SQL Editor مقبولًا؟
+
+SQL Editor مقبول **فقط** للسكربتات غير المتعلقة بالمخطط مثل `supabase/scripts/bootstrap_first_system_admin.sql` وفحوصات القراءة. **لا** تنسخ DDL من ملفات `migrations` إلى SQL Editor، لأن ذلك:
+
+1. لا يسجّل الملف في `supabase_migrations.schema_migrations`، فيظن `supabase db push` لاحقًا أن الملف لم يُطبَّق ويحاول إعادة إنشاء كائنات موجودة (تعارضات مثل `type ... already exists` أو `relation ... already exists`).
+2. يسبب انحرافًا (drift) بين المستودع وقاعدة البيانات يصعب تتبعه.
+
+### 8.3 التحقق بعد التطبيق
+
+```sql
+select version, name from supabase_migrations.schema_migrations order by version;
+select to_regclass('public.users') as users_ok,
+       to_regclass('public.roles') as roles_ok,
+       to_regclass('public.user_roles') as user_roles_ok;
+```
+
+إذا أعاد `to_regclass('public.users')` قيمة `null` فأنت تعمل على مشروع مختلف أو أن migrations لم تُطبَّق — وهذا هو السبب الشائع لخطأ `relation "public.users" does not exist`.
+
+### 8.4 إصلاح سجل migrations (Migration Repair) — بحذر
+
+إذا طُبِّق محتوى ملف خارج أدوات CLI (سهوًا) وأصبح `supabase db push` يحاول إعادة تطبيقه، لا تحذف الملف ولا تعدّله. حدّد نسخة الملف ثم علّمها في السجل دون إعادة تنفيذها، فقط بعد التأكد يدويًا من أن كائناته موجودة فعلًا:
+
+```bash
+supabase migration repair --status applied 20260901000100
+```
+
+أو لإعادة تطبيق ملف سبق تعليمه خطأً:
+
+```bash
+supabase migration repair --status reverted 20260901000100
+supabase db push
+```
+
+استخدم هذا فقط في بيئة staging وبمراجعة، ووثّق السبب في سجل التدقيق/قرار التغيير. لا تضع أبدًا أمر `repair` في migrations نفسها.
+
+---
+
+## 9) الاختبارات قبل دمج أو نشر أي تغيير
 
 من جذر المشروع:
 
@@ -283,7 +338,7 @@ npx supabase test db
 
 ---
 
-## 9) نشر staging
+## 10) نشر staging
 
 نفّذ أولًا على مشروع staging منفصل، وليس production:
 
@@ -318,7 +373,7 @@ npm run verify
 
 ---
 
-## 10) النشر كتطبيق PWA عبر GitHub Pages
+## 11) النشر كتطبيق PWA عبر GitHub Pages
 
 توجد قوالب workflow للنشر إلى GitHub Pages مع Service Worker وmanifest وأيقونات قابلة للتثبيت. اتبع الدليل المخصص، ثم أضف القوالب يدويًا من الملف المرفق:
 
@@ -327,7 +382,7 @@ npm run verify
 
 الخلاصة الأمنية: احفظ `VITE_SUPABASE_URL` و`VITE_SUPABASE_ANON_KEY` فقط في Secrets بناء الواجهة، لأنهما سيظهران في bundle المنشور. احفظ `SUPABASE_SERVICE_ROLE_KEY` ومفاتيح AES/HMAC داخل Supabase Edge Secrets أو GitHub **Environment Secrets** التي يستهلكها workflow الخلفي اليدوي فقط، ولا تضعها تحت أي اسم يبدأ بـ`VITE_`.
 
-## 11) التحضير للإنتاج
+## 12) التحضير للإنتاج
 
 بعد نجاح staging فقط:
 
@@ -345,7 +400,7 @@ npm run verify
 
 ---
 
-## 12) معالجة المشكلات الشائعة
+## 13) معالجة المشكلات الشائعة
 
 | العرض | السبب المرجح | الإجراء |
 |---|---|---|
@@ -360,7 +415,7 @@ npm run verify
 
 ---
 
-## 13) أين توجد المراجع التفصيلية
+## 14) أين توجد المراجع التفصيلية
 
 - [المعمارية](ARCHITECTURE.md): جداول البيانات، حدود Edge، وRLS.
 - [المراجعة الأمنية](SECURITY.md): الأسرار، MFA، التخزين الخاص، التدقيق، والاستجابة للحوادث.

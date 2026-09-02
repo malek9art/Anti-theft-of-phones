@@ -1,6 +1,12 @@
-# ملفات GitHub Actions لإضافتها يدويًا
+# ملفات GitHub Actions — النسخ المرجعية الكاملة (تتطلب تطبيقًا يدويًا من مالك المستودع)
 
-يتعذر رفع ملفات `.github/workflows/*.yml` من اتصال Arena الحالي لأن GitHub يطلب صلاحية `workflows`. بعد رفع بقية المشروع، أضف الملفات الثلاثة التالية يدويًا من GitHub عبر **Add file → Create new file**، والصق المحتوى كما هو في المسار المذكور.
+اتصال التكامل الحالي **لا يملك صلاحية `workflows`**، لذا لا يمكنه رفع أو تعديل ملفات `.github/workflows/*.yml`. يجب على مالك المستودع تطبيق المحتوى أدناه يدويًا من GitHub عبر **Add file → Create new file** (أو تعديل الملف الموجود) ولصق المحتوى كما هو في المسار المذكور.
+
+الملفات الثلاثة المطلوبة:
+
+- `ci.yml` — تحقق الواجهة والفحوصات الثابتة (حدّث قائمة الفروع إلى `arena/01a06464-anti-theft-of-phones`).
+- `deploy-pages.yml` — بناء الواجهة ونشرها كـ PWA على GitHub Pages (حدّث اسم الفرع كذلك).
+- `deploy-supabase.yml` — تطبيق migrations ونشر Edge Functions وأسرار الخادم (يدوي فقط عبر GitHub Environments).
 
 لا تضع قيم الأسرار داخل هذه الملفات؛ أبقِ الصيغة `${{ secrets.NAME }}` كما هي.
 
@@ -13,7 +19,7 @@ name: Verify Himaya
 
 on:
   push:
-    branches: [main, arena/01a05ec2-anti-theft-of-phones]
+    branches: [main, arena/01a06464-anti-theft-of-phones]
   pull_request:
 
 permissions:
@@ -48,7 +54,7 @@ on:
   push:
     branches:
       - main
-      - arena/01a05ec2-anti-theft-of-phones
+      - arena/01a06464-anti-theft-of-phones
   workflow_dispatch:
 
 permissions:

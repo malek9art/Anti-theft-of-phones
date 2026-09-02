@@ -55,15 +55,13 @@ npm run verify
 
 ## إنشاء أول مدير نظام
 
-بعد تأكيد حساب المدير عبر Supabase Auth، استخدم SQL Editor مقيدًا أو عملية إدارية موثقة واحدة فقط:
+بعد تطبيق migrations وتأكيد حساب المدير عبر Supabase Auth، استخدم السكربت الآمن الذي يتوقف ذاتيًا عند غياب migrations أو الحساب أو تأكيد البريد:
 
-```sql
--- استبدل UUID بحساب المدير المؤكد. هذه خطوة bootstrap مقيدة خارج التطبيق فقط.
-update public.users set account_status = 'active' where id = 'USER_UUID';
-insert into public.user_roles (user_id, role_id)
-select 'USER_UUID'::uuid, id from public.roles where key = 'system_admin'
-on conflict do nothing;
+```text
+supabase/scripts/bootstrap_first_system_admin.sql
 ```
+
+افتحه في Supabase SQL Editor، واستبدل القيمة الوحيدة `REPLACE_WITH_AUTH_USER_UUID` بمعرّف حساب Auth المؤكد، ثم نفّذه مرة واحدة. السكربت يضمن وجود ملف `public.users`، يفعّل الحساب، يمنح دور `system_admin`، ويكتب حدثًا في سجل التدقيق. لا يحتوي على UUID أو بريد أو بيانات شخصية ثابتة.
 
 يسجل المدير الدخول ويفعّل TOTP من «أمان الحساب» قبل أي عملية إدارية حساسة. ترفض الدوال الحساسة من الخادم جلسات AAL1 لجميع الأدوار، بغض النظر عن قيمة `mfa_required`؛ راجع سجل التدقيق بعد الإجراء.
 
