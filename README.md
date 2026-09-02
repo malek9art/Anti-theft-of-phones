@@ -21,6 +21,8 @@ npm run dev
 
 ثم اتبع [دليل التشغيل العربي خطوة بخطوة](docs/RUNBOOK_AR.md) لإعداد مشروع Supabase، الأسرار، migrations، Edge Functions، واختبار سيناريو القبول.
 
+> **من المتصفح فقط (بدون تيرمينال):** اتبع [دليل الإعداد والتشخيص من المتصفح](docs/SETUP_BROWSER_ONLY_AR.md) — ينشئ الجداول ويعتمد أول مسؤول وينشر الدوال عبر لوحة Supabase وGitHub Actions.
+
 ## GitHub Pages + PWA
 
 توجد قوالب workflows جاهزة لبناء الواجهة ضمن GitHub Pages وتحويلها إلى PWA قابل للتثبيت؛ أضفها يدويًا من [نسخة workflows للإضافة اليدوية](docs/GITHUB_WORKFLOWS_MANUAL.md). أضف فقط `VITE_SUPABASE_URL` و`VITE_SUPABASE_ANON_KEY` إلى GitHub Actions Secrets؛ لا تضع Service Role أو مفاتيح AES/HMAC تحت `VITE_*`. راجع [دليل GitHub Pages PWA](docs/GITHUB_PAGES_PWA.md) قبل النشر.
@@ -40,6 +42,7 @@ npx supabase test db
 - [المراجعة الأمنية](docs/SECURITY.md)
 - [التشغيل والنشر](docs/DEPLOYMENT.md)
 - [النشر كتطبيق PWA عبر GitHub Pages](docs/GITHUB_PAGES_PWA.md)
+- [الإعداد والتشخيص من المتصفح فقط](docs/SETUP_BROWSER_ONLY_AR.md)
 
 ## تنبيه قانوني وتشغيلي
 

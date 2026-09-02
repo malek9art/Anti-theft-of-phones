@@ -166,6 +166,7 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -188,7 +189,7 @@ jobs:
         run: |
           set -euo pipefail
           required=(
-            SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_URL SUPABASE_ANON_KEY
+            SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD SUPABASE_URL SUPABASE_ANON_KEY
             SUPABASE_SERVICE_ROLE_KEY ALLOWED_ORIGINS APP_REDIRECT_URL
             SENSITIVE_DATA_ENCRYPTION_KEY SENSITIVE_DATA_LOOKUP_KEY AUTH_EVENT_INGEST_SECRET
           )
@@ -223,4 +224,4 @@ jobs:
           bash scripts/deploy-functions.sh
 ```
 
-أنشئ GitHub Environments باسم `staging` و`production` ثم ضع فيها الأسرار المطلوبة. لا تضف مفاتيح Service Role أو AES/HMAC إلى workflow Pages أو إلى أسماء تبدأ بـ `VITE_`.
+أنشئ GitHub Environments باسم `staging` و`production` ثم ضع فيها الأسرار المطلوبة. `SUPABASE_DB_PASSWORD` هو كلمة مرور قاعدة بيانات المشروع وهي مطلوبة ليعمل `supabase link`/`supabase db push` في بيئة CI غير التفاعلية. لا تضف مفاتيح Service Role أو AES/HMAC إلى workflow Pages أو إلى أسماء تبدأ بـ `VITE_`.

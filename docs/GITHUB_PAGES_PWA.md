@@ -160,6 +160,7 @@ production
 ```text
 SUPABASE_ACCESS_TOKEN
 SUPABASE_PROJECT_REF
+SUPABASE_DB_PASSWORD
 SUPABASE_URL
 SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
@@ -169,6 +170,8 @@ SENSITIVE_DATA_ENCRYPTION_KEY
 SENSITIVE_DATA_LOOKUP_KEY
 AUTH_EVENT_INGEST_SECRET
 ```
+
+`SUPABASE_DB_PASSWORD` هو كلمة مرور قاعدة بيانات المشروع (تُضبط من Dashboard → Project Settings → Database) وهي ضرورية ليعمل `supabase link` و`supabase db push` في بيئة CI غير التفاعلية.
 
 #### توليد مفاتيح التشفير
 
