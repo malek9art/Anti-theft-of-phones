@@ -8,7 +8,7 @@ const read = (file) => readFileSync(join(root, file), 'utf8')
 
 test('GitHub Pages workflow template uses only browser-safe build configuration', () => {
   // This template is committed as documentation because GitHub workflow files may need manual upload.
-  const manual = read('docs/GITHUB_WORKFLOWS_MANUAL.md')
+  const manual = read('docs-source/GITHUB_WORKFLOWS_MANUAL.md')
   const workflow = manual.slice(manual.indexOf('## 2)'), manual.indexOf('## 3)'))
   assert.match(workflow, /actions\/deploy-pages@/)
   assert.match(workflow, /VITE_SUPABASE_URL: \$\{\{ secrets\.VITE_SUPABASE_URL \}\}/)
