@@ -1,0 +1,61 @@
+-- ============================================================================
+-- حماية | حذف جميع كائنات البناء السابق (جداول + سياسات + دوال + أنواع + مشغلات)
+-- ============================================================================
+-- الغرض: تصفير قاعدة بيانات Supabase من كل ما أنشأه البناء السابق، لتتمكن من
+-- بناء التطبيق من الصفر (بمستودع جديد) على **نفس مشروع Supabase**.
+--
+-- آمن للتكرار (Idempotent): يمكن تشغيله أكثر من مرة دون أخطاء، ويترك مشروع
+-- Supabase نظيفًا بمعنى "مشروع جديد بلا كائنات تطبيق".
+--
+-- ما لا يلمسه هذا السكربت (مهم):
+--   * مخططات Supabase المُدارة: auth, storage, extensions, realtime, graphql, vault
+--   * مستخدمو المصادقة auth.users وأي بيانات Auth موجودة
+--   * امتداد pgcrypto في extensions (قياسي وغير ضار)
+--   * سجل الترحيلات: تنفيذ SQL Editor لا يسجل في supabase_migrations.schema_migrations
+--
+-- الاستخدام: افتح Supabase Dashboard → SQL Editor → الصق الكل ثم Run.
+-- ============================================================================
+
+begin;
+
+-- 1) إزالة المشغّل الذي أُنشئ على جدول Supabase المُدار auth.users
+drop trigger if exists on_auth_user_created on auth.users;
+
+-- 2) إزالة سياسات التخزين المنكرة التي أُنشئت على storage.objects
+drop policy if exists "deny browser access to evidence-private" on storage.objects;
+drop policy if exists "deny browser access to device-media-private" on storage.objects;
+drop policy if exists "deny browser access to identity-private" on storage.objects;
+
+-- 3) حذف محتويات الدلاء الخاصة ثم الدلاء نفسها
+delete from storage.objects
+ where bucket_id in ('evidence-private', 'device-media-private', 'identity-private');
+delete from storage.buckets
+ where id in ('evidence-private', 'device-media-private', 'identity-private');
+
+-- 4) إسقاط مخططي التطبيق كاملين: يكفي لإزالة كل الجداول والدوال والأنواع (enums)
+--    والسياسات والمشغلات والتسلسلات التي بنيناها داخل public و private.
+drop schema if exists private cascade;
+drop schema if exists public cascade;
+
+-- 5) إعادة إنشاء مخطط public وامتيازات Supabase الافتراضية
+create schema public;
+
+grant usage on schema public to postgres, anon, authenticated, service_role;
+grant all on all tables    in schema public to postgres, anon, authenticated, service_role;
+grant all on all sequences in schema public to postgres, anon, authenticated, service_role;
+grant all on all functions in schema public to postgres, anon, authenticated, service_role;
+
+alter default privileges in schema public grant all on tables    to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to postgres, anon, authenticated, service_role;
+
+commit;
+
+-- ============================================================================
+-- تحقق سريع (شغّله بعد التنفيذ): يجب أن تعود كل النتائج صفرًا/فارغة
+--   select count(*) from pg_tables   where schemaname in ('public','private');
+--   select count(*) from pg_policies where schemaname in ('public','storage');
+--   select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+--    where n.nspname in ('public','private');
+--   select count(*) from storage.buckets where id like '%-private';
+-- ============================================================================
