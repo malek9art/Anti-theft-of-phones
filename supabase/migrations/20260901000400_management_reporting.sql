@@ -36,7 +36,7 @@ begin
   perform private.append_audit('submit_shop', 'shop', v_shop_id, null, jsonb_build_object('shop_name', left(btrim(p_shop_name), 180)), 'success');
 
   insert into public.notifications (recipient_id, severity, notification_type, title, body, entity_type, entity_id)
-  select distinct ur.user_id, 'important', 'shop_submitted', 'طلب اعتماد محل جديد', 'هناك طلب محل جديد بانتظار المراجعة.', 'shop', v_shop_id
+  select distinct ur.user_id, 'important'::public.notification_severity, 'shop_submitted', 'طلب اعتماد محل جديد', 'هناك طلب محل جديد بانتظار المراجعة.', 'shop', v_shop_id
   from public.user_roles ur join public.roles r on r.id = ur.role_id
   where r.key = 'system_admin';
 
@@ -89,7 +89,7 @@ begin
    where id = p_shop_id;
   perform private.append_audit('suspend_shop', 'shop', p_shop_id, jsonb_build_object('status', v_shop.status), jsonb_build_object('status', 'suspended'), 'success', jsonb_build_object('reason', left(btrim(p_reason), 1000)));
   insert into public.notifications (recipient_id, severity, notification_type, title, body, entity_type, entity_id)
-  select su.user_id, 'critical', 'shop_suspended', 'تم إيقاف المحل', 'أوقف المحل ولا يمكن تسجيل عمليات جديدة حتى إشعار آخر.', 'shop', p_shop_id
+  select su.user_id, 'critical'::public.notification_severity, 'shop_suspended', 'تم إيقاف المحل', 'أوقف المحل ولا يمكن تسجيل عمليات جديدة حتى إشعار آخر.', 'shop', p_shop_id
   from public.shop_users su where su.shop_id = p_shop_id and su.is_active;
   return jsonb_build_object('shop_id', p_shop_id, 'status', 'suspended');
 end;

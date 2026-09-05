@@ -600,6 +600,7 @@ begin
   end if;
 
   perform set_config('app.report_status_transition', 'on', true);
+  perform set_config('app.report_assignment', 'off', true);
   update public.stolen_reports
      set status = p_to_status,
          updated_at = clock_timestamp(),
@@ -702,6 +703,7 @@ begin
   end if;
 
   perform set_config('app.report_assignment', 'on', true);
+  perform set_config('app.report_status_transition', 'off', true);
   update public.stolen_reports
      set assigned_officer_id = p_assigned_officer_id,
          assigned_delegate_id = p_assigned_delegate_id,
@@ -721,7 +723,7 @@ begin
   );
 
   insert into public.notifications (recipient_id, severity, notification_type, title, body, entity_type, entity_id)
-  select assigned_id, 'important', 'case_assigned', 'تم تعيين حالة لك', 'تم تحويل حالة تحتاج إلى متابعة.', 'stolen_report', p_report_id
+  select assigned_id, 'important'::public.notification_severity, 'case_assigned', 'تم تعيين حالة لك', 'تم تحويل حالة تحتاج إلى متابعة.', 'stolen_report', p_report_id
   from unnest(array[p_assigned_officer_id, p_assigned_delegate_id]) as assigned_id
   where assigned_id is not null;
 
@@ -903,7 +905,7 @@ begin
       'report_type', q.report_type, 'incident_at', q.incident_at, 'status', q.status, 'priority', q.priority,
       'agency_id', q.agency_id, 'assigned_officer_id', q.assigned_officer_id, 'assigned_delegate_id', q.assigned_delegate_id,
       'created_at', q.created_at
-    ) order by q.created_at desc), '[]'::jsonb)
+    ) order by q.created_at desc)
     from (
       select sr.* from public.stolen_reports sr
       where public.can_access_report(sr.id)

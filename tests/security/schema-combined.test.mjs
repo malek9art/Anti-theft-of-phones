@@ -25,3 +25,24 @@ test('schema_combined.sql includes the foundation tables and the hardening migra
   assert.match(combined, /revoke create on schema public from public, anon, authenticated/)
   assert.match(combined, /20260901001600_schema_function_hardening\.sql/)
 })
+
+test('IMEI Luhn loop iterates 15..1 (a reversed 1..15 loop would always pass)', () => {
+  assert.match(combined, /for v_index in reverse 15\.\.1 loop/)
+  assert.doesNotMatch(combined, /for v_index in reverse 1\.\.15 loop/)
+})
+
+test('aggregate order-by inside coalesce keeps its closing paren until after the subquery', () => {
+  // This exact shape once put `, '[]'::jsonb)` before the FROM subquery and made
+  // PostgreSQL fail with `mismatched parentheses at or near ")"`.
+  assert.doesNotMatch(combined, /\border by q\.created_at desc\), '\[\]'::jsonb\)/)
+})
+
+test('report guard flags are scoped per operation so one update cannot leak into the next', () => {
+  assert.match(combined, /set_config\('app\.report_assignment', 'off', true\);/)
+  assert.match(combined, /set_config\('app\.report_status_transition', 'off', true\);/)
+})
+
+test('notification severity literals in INSERT..SELECT are cast to the enum', () => {
+  assert.ok((combined.match(/'important'::public\.notification_severity/g) || []).length >= 2)
+  assert.match(combined, /'critical'::public\.notification_severity/)
+})

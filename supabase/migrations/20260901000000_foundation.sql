@@ -46,7 +46,7 @@ begin
   end if;
 
   -- Luhn: the right-most check digit is not doubled.
-  for v_index in reverse 1..15 loop
+  for v_index in reverse 15..1 loop
     v_digit := substr(v_imei, v_index, 1)::integer;
     if v_double then
       v_digit := v_digit * 2;
